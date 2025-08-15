@@ -6,6 +6,7 @@ import Footer from "@/components/common/footer";
 import { Header } from "@/components/common/header";
 import { db } from "@/db";
 import { shippingAddressTable } from "@/db/schema";
+import { getCategories } from "@/helpers/categories";
 import { auth } from "@/lib/auth";
 
 import CartSummary from "../components/cart-summary";
@@ -36,21 +37,20 @@ const IdentificationPage = async () => {
   if (!cart || cart?.items.length === 0) {
     redirect("/");
   }
-  const shippingAddresses = await db.query.shippingAddressTable.findMany({
-    where: eq(shippingAddressTable.userId, session.user.id),
-  });
+  const [shippingAddresses, categories] = await Promise.all([
+    db.query.shippingAddressTable.findMany({
+      where: eq(shippingAddressTable.userId, session.user.id),
+    }),
+    getCategories(),
+  ]);
   const cartTotalInCents = cart.items.reduce(
     (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
     0,
   );
   return (
     <div>
-      <Header />
-      <div className="space-y-4 px-5">
-        <Addresses
-          shippingAddresses={shippingAddresses}
-          defaultShippingAddressId={cart.shippingAddress?.id || null}
-        />
+      <Header categories={categories} />
+      <div className="space-y-4 px-5 pt-25">
         <CartSummary
           subtotalInCents={cartTotalInCents}
           totalInCents={cartTotalInCents}
@@ -62,6 +62,10 @@ const IdentificationPage = async () => {
             priceInCents: item.productVariant.priceInCents,
             imageUrl: item.productVariant.imageUrl,
           }))}
+        />
+        <Addresses
+          shippingAddresses={shippingAddresses}
+          defaultShippingAddressId={cart.shippingAddress?.id || null}
         />
       </div>
       <div className="mt-12">

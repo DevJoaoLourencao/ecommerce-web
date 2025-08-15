@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 
 import Footer from "@/components/common/footer";
 import { Header } from "@/components/common/header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
+import { getCategories } from "@/helpers/categories";
 import { auth } from "@/lib/auth";
 
 import CartSummary from "../components/cart-summary";
@@ -44,10 +44,25 @@ const ConfirmationPage = async () => {
   if (!cart.shippingAddress) {
     redirect("/cart/identification");
   }
+
+  const categories = await getCategories();
+
   return (
     <div>
-      <Header />
-      <div className="space-y-4 px-5">
+      <Header categories={categories} />
+      <div className="space-y-4 px-5 pt-25">
+        <CartSummary
+          subtotalInCents={cartTotalInCents}
+          totalInCents={cartTotalInCents}
+          products={cart.items.map((item) => ({
+            id: item.productVariant.id,
+            name: item.productVariant.product.name,
+            variantName: item.productVariant.name,
+            quantity: item.quantity,
+            priceInCents: item.productVariant.priceInCents,
+            imageUrl: item.productVariant.imageUrl,
+          }))}
+        />
         <Card>
           <CardHeader>
             <CardTitle>Identificação</CardTitle>
@@ -61,18 +76,6 @@ const ConfirmationPage = async () => {
             <FinishOrderButton />
           </CardContent>
         </Card>
-        <CartSummary
-          subtotalInCents={cartTotalInCents}
-          totalInCents={cartTotalInCents}
-          products={cart.items.map((item) => ({
-            id: item.productVariant.id,
-            name: item.productVariant.product.name,
-            variantName: item.productVariant.name,
-            quantity: item.quantity,
-            priceInCents: item.productVariant.priceInCents,
-            imageUrl: item.productVariant.imageUrl,
-          }))}
-        />
       </div>
       <div className="mt-12">
         <Footer />

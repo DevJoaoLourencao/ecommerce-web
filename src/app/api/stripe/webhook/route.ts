@@ -20,6 +20,7 @@ export const POST = async (request: Request) => {
     signature,
     process.env.STRIPE_WEBHOOK_SECRET,
   );
+  console.log(JSON.stringify(event));
   if (event.type === "checkout.session.completed") {
     console.log("Checkout session completed");
     const session = event.data.object as Stripe.Checkout.Session;

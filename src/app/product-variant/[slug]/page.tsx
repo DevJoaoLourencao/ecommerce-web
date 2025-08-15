@@ -7,6 +7,7 @@ import { Header } from "@/components/common/header";
 import ProductList from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable, productVariantTable } from "@/db/schema";
+import { getCategories } from "@/helpers/categories";
 import { formatCentsToBRL } from "@/helpers/money";
 
 import ProductActions from "./components/product-actions";
@@ -18,16 +19,19 @@ interface ProductVariantPageProps {
 
 const ProductVariantPage = async ({ params }: ProductVariantPageProps) => {
   const { slug } = await params;
-  const productVariant = await db.query.productVariantTable.findFirst({
-    where: eq(productVariantTable.slug, slug),
-    with: {
-      product: {
-        with: {
-          variants: true,
+  const [productVariant, categories] = await Promise.all([
+    db.query.productVariantTable.findFirst({
+      where: eq(productVariantTable.slug, slug),
+      with: {
+        product: {
+          with: {
+            variants: true,
+          },
         },
       },
-    },
-  });
+    }),
+    getCategories(),
+  ]);
   if (!productVariant) {
     return notFound();
   }
@@ -39,8 +43,8 @@ const ProductVariantPage = async ({ params }: ProductVariantPageProps) => {
   });
   return (
     <>
-      <Header />
-      <div className="flex flex-col space-y-6">
+      <Header categories={categories} />
+      <div className="flex flex-col space-y-6 pt-19">
         <Image
           src={productVariant.imageUrl}
           alt={productVariant.name}

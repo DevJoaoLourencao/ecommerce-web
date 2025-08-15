@@ -1,6 +1,7 @@
 import { Header } from "@/components/common/header";
 import { db } from "@/db";
 import { orderTable } from "@/db/schema";
+import { getCategories } from "@/helpers/categories";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -13,28 +14,31 @@ const MyOrdersPage = async () => {
   });
 
   if (!session?.user.id) {
-    return redirect("/login");
+    return redirect("/authentication");
   }
 
-  const orders = await db.query.orderTable.findMany({
-    where: eq(orderTable.userId, session.user.id),
-    with: {
-      items: {
-        with: {
-          productVariant: {
-            with: {
-              product: true,
+  const [orders, categories] = await Promise.all([
+    db.query.orderTable.findMany({
+      where: eq(orderTable.userId, session.user.id),
+      with: {
+        items: {
+          with: {
+            productVariant: {
+              with: {
+                product: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    }),
+    getCategories(),
+  ]);
 
   return (
     <>
-      <Header />
-      <div className="px-5">
+      <Header categories={categories} />
+      <div className="px-5 pt-25">
         <Orders
           orders={orders.map((order) => ({
             id: order.id,
