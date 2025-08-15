@@ -20,7 +20,7 @@ const CheckoutSuccessPage = () => {
       <Dialog open={true} onOpenChange={() => {}}>
         <DialogContent className="text-center">
           <Image
-            src="/illustration.svg"
+            src="/success.png"
             alt="Success"
             width={300}
             height={300}
@@ -33,8 +33,8 @@ const CheckoutSuccessPage = () => {
           </DialogDescription>
 
           <DialogFooter>
-            <Button className="rounded-full" size="lg">
-              Ver meus pedidos
+            <Button className="rounded-full" size="lg" asChild>
+              <Link href="/my-orders">Ver meus pedidos</Link>
             </Button>
             <Button
               className="rounded-full"
