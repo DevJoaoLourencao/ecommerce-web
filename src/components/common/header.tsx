@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { authClient } from "@/lib/auth-client";
 
+import { GenderCategories } from "@/helpers/gender-categories";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
@@ -26,13 +27,15 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 import { Cart } from "./cart";
+import GenderCategoriesAccordion from "./gender-categories-accordion";
 import { SearchInput } from "./search-input";
 
 interface HeaderProps {
   categories?: { id: string; name: string; slug: string }[];
+  genderCategories?: GenderCategories;
 }
 
-export const Header = ({ categories = [] }: HeaderProps) => {
+export const Header = ({ categories = [], genderCategories }: HeaderProps) => {
   const { data: session } = authClient.useSession();
   const router = useRouter();
   const { isVisible } = useScrollDirection();
@@ -175,22 +178,37 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   </div>
                   <Separator />
 
-                  {/* Categorias */}
+                  {/* Categorias por Gênero */}
                   <div className="flex-1 p-4">
-                    {categories.length > 0 && (
-                      <div className="space-y-1">
-                        {categories.map((category) => (
-                          <Link
-                            key={category.id}
-                            href={`/category/${category.slug}`}
-                            className="block rounded-lg p-3 transition-colors hover:bg-gray-50"
-                          >
-                            <span className="font-medium text-gray-700">
-                              {category.name}
-                            </span>
-                          </Link>
-                        ))}
+                    {genderCategories ? (
+                      <div className="space-y-2">
+                        <h3 className="px-3 text-sm font-medium tracking-wider text-gray-500 uppercase">
+                          Categorias
+                        </h3>
+                        <GenderCategoriesAccordion
+                          genderCategories={genderCategories}
+                        />
                       </div>
+                    ) : (
+                      // Fallback para as categorias tradicionais
+                      categories.length > 0 && (
+                        <div className="space-y-1">
+                          <h3 className="px-3 pb-2 text-sm font-medium tracking-wider text-gray-500 uppercase">
+                            Categorias
+                          </h3>
+                          {categories.map((category) => (
+                            <Link
+                              key={category.id}
+                              href={`/category/${category.slug}`}
+                              className="block rounded-lg p-3 transition-colors hover:bg-gray-50"
+                            >
+                              <span className="font-medium text-gray-700">
+                                {category.name}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      )
                     )}
                   </div>
 

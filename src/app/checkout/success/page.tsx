@@ -5,13 +5,17 @@ import { Header } from "@/components/common/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCategories } from "@/helpers/categories";
+import { getCategoriesByGender } from "@/helpers/gender-categories";
 
 const CheckoutSuccessPage = async () => {
-  const categories = await getCategories();
+  const [categories, genderCategories] = await Promise.all([
+    getCategories(),
+    getCategoriesByGender(),
+  ]);
 
   return (
     <>
-      <Header categories={categories} />
+      <Header categories={categories} genderCategories={genderCategories} />
       <div className="px-5 pt-25">
         <div className="flex min-h-[80vh] items-center justify-center">
           <Card className="w-full max-w-md">

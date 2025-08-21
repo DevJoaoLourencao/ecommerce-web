@@ -11,5 +11,8 @@ export const useCart = (params?: {
     queryKey: getUseCartQueryKey(),
     queryFn: () => getCart(),
     initialData: params?.initialData,
+    staleTime: 1000 * 60, // 1 minuto
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };

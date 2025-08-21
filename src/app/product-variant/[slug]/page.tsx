@@ -8,10 +8,11 @@ import ProductList from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable, productVariantTable } from "@/db/schema";
 import { getCategories } from "@/helpers/categories";
+import { getCategoriesByGender } from "@/helpers/gender-categories";
 import { formatCentsToBRL } from "@/helpers/money";
 
+import EnhancedVariantSelector from "./components/enhanced-variant-selector";
 import ProductActions from "./components/product-actions";
-import VariantSelector from "./components/variant-selector";
 
 interface ProductVariantPageProps {
   params: Promise<{ slug: string }>;
@@ -19,7 +20,7 @@ interface ProductVariantPageProps {
 
 const ProductVariantPage = async ({ params }: ProductVariantPageProps) => {
   const { slug } = await params;
-  const [productVariant, categories] = await Promise.all([
+  const [productVariant, categories, genderCategories] = await Promise.all([
     db.query.productVariantTable.findFirst({
       where: eq(productVariantTable.slug, slug),
       with: {
@@ -31,6 +32,7 @@ const ProductVariantPage = async ({ params }: ProductVariantPageProps) => {
       },
     }),
     getCategories(),
+    getCategoriesByGender(),
   ]);
   if (!productVariant) {
     return notFound();
@@ -43,7 +45,7 @@ const ProductVariantPage = async ({ params }: ProductVariantPageProps) => {
   });
   return (
     <>
-      <Header categories={categories} />
+      <Header categories={categories} genderCategories={genderCategories} />
       <div className="flex flex-col space-y-6 pt-19">
         <Image
           src={productVariant.imageUrl}
@@ -55,7 +57,7 @@ const ProductVariantPage = async ({ params }: ProductVariantPageProps) => {
         />
 
         <div className="px-5">
-          <VariantSelector
+          <EnhancedVariantSelector
             selectedVariantSlug={productVariant.slug}
             variants={productVariant.product.variants}
           />
@@ -69,12 +71,29 @@ const ProductVariantPage = async ({ params }: ProductVariantPageProps) => {
           <h3 className="text-muted-foreground text-sm">
             {productVariant.name}
           </h3>
-          <h3 className="text-lg font-semibold">
-            {formatCentsToBRL(productVariant.priceInCents)}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">
+              {formatCentsToBRL(productVariant.priceInCents)}
+            </h3>
+            {productVariant.stock <= 3 && productVariant.stock > 0 && (
+              <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600">
+                Apenas {productVariant.stock} em estoque
+              </span>
+            )}
+            {productVariant.stock === 0 && (
+              <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-600">
+                Fora de estoque
+              </span>
+            )}
+          </div>
         </div>
 
-        <ProductActions productVariantId={productVariant.id} />
+        <ProductActions
+          productVariantId={productVariant.id}
+          stock={productVariant.stock}
+          productName={productVariant.product.name}
+          variantName={productVariant.name}
+        />
 
         <div className="px-5">
           <p className="text-shadow-amber-600">

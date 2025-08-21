@@ -78,6 +78,12 @@ export const verificationTable = pgTable("verification", {
   ),
 });
 
+export const genderEnum = pgEnum("gender", [
+  "masculino",
+  "feminino",
+  "unissex",
+]);
+
 export const categoryTable = pgTable("category", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
@@ -97,6 +103,7 @@ export const productTable = pgTable("product", {
   name: text().notNull(),
   slug: text().notNull().unique(),
   description: text().notNull(),
+  gender: genderEnum().notNull().default("unissex"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -116,6 +123,8 @@ export const productVariantTable = pgTable("product_variant", {
   name: text().notNull(),
   slug: text().notNull().unique(),
   color: text().notNull(),
+  size: text(), // Tamanho: PP, P, M, G, GG para roupas; 38-46 para calçados; pode ser null para acessórios
+  stock: integer().notNull().default(0), // Quantidade em estoque
   priceInCents: integer("price_in_cents").notNull(),
   imageUrl: text("image_url").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -177,6 +186,10 @@ export const cartTable = pgTable("cart", {
     () => shippingAddressTable.id,
     { onDelete: "set null" },
   ),
+  shippingOptionId: text("shipping_option_id"), // ID da opção de frete selecionada
+  shippingOptionName: text("shipping_option_name"), // Nome da modalidade (PAC, SEDEX, etc)
+  shippingCostInCents: integer("shipping_cost_in_cents"), // Custo do frete em centavos
+  shippingDeliveryDays: integer("shipping_delivery_days"), // Prazo de entrega em dias
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

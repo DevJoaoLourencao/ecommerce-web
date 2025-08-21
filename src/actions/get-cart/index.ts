@@ -38,15 +38,20 @@ export const getCart = async () => {
     return {
       ...newCart,
       items: [],
+      subtotalInCents: 0,
       totalPriceInCents: 0,
       shippingAddress: null,
     };
   }
+  const subtotalInCents = cart.items.reduce(
+    (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
+    0,
+  );
+  const shippingCostInCents = cart.shippingCostInCents || 0;
+
   return {
     ...cart,
-    totalPriceInCents: cart.items.reduce(
-      (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
-      0,
-    ),
+    subtotalInCents,
+    totalPriceInCents: subtotalInCents + shippingCostInCents,
   };
 };

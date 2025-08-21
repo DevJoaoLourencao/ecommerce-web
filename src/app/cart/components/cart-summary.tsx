@@ -1,5 +1,4 @@
 import Image from "next/image";
-import React from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -7,6 +6,7 @@ import { formatCentsToBRL } from "@/helpers/money";
 
 interface CartSummaryProps {
   subtotalInCents: number;
+  shippingInCents?: number;
   totalInCents: number;
   products: Array<{
     id: string;
@@ -20,6 +20,7 @@ interface CartSummaryProps {
 
 const CartSummary = ({
   subtotalInCents,
+  shippingInCents = 0,
   totalInCents,
   products,
 }: CartSummaryProps) => {
@@ -37,7 +38,11 @@ const CartSummary = ({
         </div>
         <div className="flex justify-between">
           <p className="text-sm">Frete</p>
-          <p className="text-muted-foreground text-sm font-medium">GRÁTIS</p>
+          <p className="text-muted-foreground text-sm font-medium">
+            {shippingInCents === 0
+              ? "GRÁTIS"
+              : formatCentsToBRL(shippingInCents)}
+          </p>
         </div>
         <div className="flex justify-between">
           <p className="text-sm">Total</p>

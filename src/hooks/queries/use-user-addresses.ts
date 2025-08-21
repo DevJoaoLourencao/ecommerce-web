@@ -12,5 +12,8 @@ export const useUserAddresses = (params?: {
     queryKey: getUserAddressesQueryKey(),
     queryFn: getUserAddresses,
     initialData: params?.initialData,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };

@@ -2,6 +2,7 @@ import { Header } from "@/components/common/header";
 import { db } from "@/db";
 import { orderTable } from "@/db/schema";
 import { getCategories } from "@/helpers/categories";
+import { getCategoriesByGender } from "@/helpers/gender-categories";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -17,7 +18,7 @@ const MyOrdersPage = async () => {
     return redirect("/authentication");
   }
 
-  const [orders, categories] = await Promise.all([
+  const [orders, categories, genderCategories] = await Promise.all([
     db.query.orderTable.findMany({
       where: eq(orderTable.userId, session.user.id),
       with: {
@@ -33,11 +34,12 @@ const MyOrdersPage = async () => {
       },
     }),
     getCategories(),
+    getCategoriesByGender(),
   ]);
 
   return (
     <>
-      <Header categories={categories} />
+      <Header categories={categories} genderCategories={genderCategories} />
       <div className="px-5 pt-25">
         <Orders
           orders={orders.map((order) => ({

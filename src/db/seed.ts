@@ -1,7 +1,15 @@
 import crypto from "crypto";
 
 import { db } from ".";
-import { categoryTable, productTable, productVariantTable } from "./schema";
+import {
+  cartItemTable,
+  cartTable,
+  categoryTable,
+  orderItemTable,
+  orderTable,
+  productTable,
+  productVariantTable,
+} from "./schema";
 
 const productImages = {
   Mochila: {
@@ -248,6 +256,27 @@ function generateSlug(name: string): string {
     .trim();
 }
 
+// Definição de tamanhos por categoria
+const sizeByCategoryName = {
+  Acessórios: [], // Sem tamanhos para acessórios
+  "Bermuda & Shorts": ["PP", "P", "M", "G", "GG"],
+  Calças: ["PP", "P", "M", "G", "GG"],
+  Camisetas: ["PP", "P", "M", "G", "GG"],
+  "Jaquetas & Moletons": ["PP", "P", "M", "G", "GG"],
+  Tênis: ["38", "39", "40", "41", "42", "43", "44", "45", "46"],
+};
+
+// Função para gerar estoque aleatório (simular disponibilidade real)
+function generateRandomStock(): number {
+  const stockOptions = [0, 0, 0, 0, 1, 1, 2, 3, 5, 8, 10, 15, 20]; // Mais produtos sem estoque (40% chance de 0)
+  return stockOptions[Math.floor(Math.random() * stockOptions.length)];
+}
+
+// Função para gerar estoque zero (cores completamente sem estoque)
+function generateZeroStock(): number {
+  return 0;
+}
+
 const categories = [
   {
     name: "Acessórios",
@@ -282,6 +311,7 @@ const products = [
     description:
       "Mochila resistente e confortável, ideal para o dia a dia e viagens.",
     categoryName: "Acessórios",
+    gender: "unissex" as const,
     variants: [
       { color: "Preta", price: 12999 },
       { color: "Branca", price: 12999 },
@@ -291,6 +321,7 @@ const products = [
     name: "Meia Alta",
     description: "Meia alta de algodão, confortável e durável.",
     categoryName: "Acessórios",
+    gender: "unissex" as const,
     variants: [
       { color: "Branca", price: 1999 },
       { color: "Preta", price: 1999 },
@@ -300,6 +331,7 @@ const products = [
     name: "Boné Nocta",
     description: "Boné Nocta com design moderno e ajuste confortável.",
     categoryName: "Acessórios",
+    gender: "masculino" as const,
     variants: [
       { color: "Preto", price: 8999 },
       { color: "Vinho", price: 8999 },
@@ -310,6 +342,7 @@ const products = [
     name: "Boné Curvo",
     description: "Boné com aba curva, estilo clássico e versátil.",
     categoryName: "Acessórios",
+    gender: "masculino" as const,
     variants: [
       { color: "Azul", price: 7999 },
       { color: "Bege", price: 7999 },
@@ -323,6 +356,7 @@ const products = [
     description:
       "Shorts esportivo para atividades físicas, com tecido que absorve o suor.",
     categoryName: "Bermuda & Shorts",
+    gender: "unissex" as const,
     variants: [
       { color: "Preto", price: 6999 },
       { color: "Azul", price: 6999 },
@@ -333,6 +367,7 @@ const products = [
     name: "Shorts Core",
     description: "Shorts casual confortável, perfeito para o dia a dia.",
     categoryName: "Bermuda & Shorts",
+    gender: "feminino" as const,
     variants: [
       { color: "Verde", price: 5999 },
       { color: "Preto", price: 5999 },
@@ -344,6 +379,7 @@ const products = [
     description:
       "Shorts com design moderno e confortável, ideal para diversas ocasiões.",
     categoryName: "Bermuda & Shorts",
+    gender: "masculino" as const,
     variants: [
       { color: "Marrom", price: 7499 },
       { color: "Preto", price: 7499 },
@@ -355,6 +391,7 @@ const products = [
     description:
       "Bermuda premium com qualidade superior e design diferenciado.",
     categoryName: "Bermuda & Shorts",
+    gender: "masculino" as const,
     variants: [
       { color: "Verde", price: 8999 },
       { color: "Preta", price: 8999 },
@@ -368,6 +405,7 @@ const products = [
     description:
       "Calça esportiva Nike Club, confortável e versátil para treinos e uso casual.",
     categoryName: "Calças",
+    gender: "unissex" as const,
     variants: [
       { color: "Bege", price: 15999 },
       { color: "Preta", price: 15999 },
@@ -379,6 +417,7 @@ const products = [
     description:
       "Calça de malha com tecido macio e confortável, ideal para relaxar.",
     categoryName: "Calças",
+    gender: "feminino" as const,
     variants: [
       { color: "Preta", price: 12999 },
       { color: "Branca", price: 12999 },
@@ -390,6 +429,7 @@ const products = [
     description:
       "Calça com design urbano e moderno, perfeita para o street style.",
     categoryName: "Calças",
+    gender: "masculino" as const,
     variants: [
       { color: "Bege", price: 13999 },
       { color: "Branca", price: 13999 },
@@ -401,6 +441,7 @@ const products = [
     description:
       "Calça Jordan com qualidade premium e design icônico da marca.",
     categoryName: "Calças",
+    gender: "masculino" as const,
     variants: [
       { color: "Verde", price: 18999 },
       { color: "Preta", price: 18999 },
@@ -414,6 +455,7 @@ const products = [
     description:
       "Camiseta ACG com design técnico e material de alta qualidade.",
     categoryName: "Camisetas",
+    gender: "unissex" as const,
     variants: [
       { color: "Bege", price: 6999 },
       { color: "Preta", price: 6999 },
@@ -425,6 +467,7 @@ const products = [
     description:
       "Camiseta para corrida com tecido respirável e conforto superior.",
     categoryName: "Camisetas",
+    gender: "unissex" as const,
     variants: [
       { color: "Preta", price: 5999 },
       { color: "Azul", price: 5999 },
@@ -435,6 +478,7 @@ const products = [
     description:
       "Camiseta esportiva para atividades físicas com tecnologia Dri-FIT.",
     categoryName: "Camisetas",
+    gender: "feminino" as const,
     variants: [
       { color: "Branca", price: 5499 },
       { color: "Preta", price: 5499 },
@@ -445,6 +489,7 @@ const products = [
     description:
       "Camiseta com estampa inspirada na natureza, confortável e estilosa.",
     categoryName: "Camisetas",
+    gender: "masculino" as const,
     variants: [
       { color: "Preta", price: 6499 },
       { color: "Azul", price: 6499 },
@@ -457,6 +502,7 @@ const products = [
     description:
       "Jaqueta corta-vento leve e resistente, ideal para atividades ao ar livre.",
     categoryName: "Jaquetas & Moletons",
+    gender: "unissex" as const,
     variants: [
       { color: "Preto", price: 19999 },
       { color: "Branco", price: 19999 },
@@ -467,6 +513,7 @@ const products = [
     description:
       "Jaqueta Windrunner com design clássico e proteção contra o vento.",
     categoryName: "Jaquetas & Moletons",
+    gender: "masculino" as const,
     variants: [
       { color: "Azul", price: 22999 },
       { color: "Bege", price: 22999 },
@@ -477,6 +524,7 @@ const products = [
     description:
       "Jaqueta com estilo urbano e moderno, perfeita para compor looks casuais.",
     categoryName: "Jaquetas & Moletons",
+    gender: "masculino" as const,
     variants: [
       { color: "Marrom", price: 17999 },
       { color: "Cinza", price: 17999 },
@@ -486,6 +534,7 @@ const products = [
     name: "Jaqueta Nike Club",
     description: "Jaqueta Nike Club com qualidade premium e design atemporal.",
     categoryName: "Jaquetas & Moletons",
+    gender: "masculino" as const,
     variants: [
       { color: "Azul", price: 25999 },
       { color: "Amarela", price: 25999 },
@@ -498,6 +547,7 @@ const products = [
     description:
       "Tênis Nike Vomero com tecnologia de amortecimento superior para corridas.",
     categoryName: "Tênis",
+    gender: "unissex" as const,
     variants: [
       { color: "Preto", price: 79999 },
       { color: "Branco", price: 79999 },
@@ -508,6 +558,7 @@ const products = [
     name: "Tênis Nike Panda",
     description: "Tênis Nike com design Panda icônico, confortável e estiloso.",
     categoryName: "Tênis",
+    gender: "unissex" as const,
     variants: [
       { color: "Verde", price: 69999 },
       { color: "Azul", price: 69999 },
@@ -519,6 +570,7 @@ const products = [
     description:
       "Tênis Nike Air Force 1, um clássico atemporal com design icônico.",
     categoryName: "Tênis",
+    gender: "unissex" as const,
     variants: [
       { color: "Preto", price: 89999 },
       { color: "Branco", price: 89999 },
@@ -528,6 +580,7 @@ const products = [
     name: "Tênis Nike Dunk Low",
     description: "Tênis Nike Dunk Low com design retrô e conforto moderno.",
     categoryName: "Tênis",
+    gender: "masculino" as const,
     variants: [
       { color: "Branco", price: 75999 },
       { color: "Preto", price: 75999 },
@@ -540,8 +593,12 @@ async function main() {
   console.log("🌱 Iniciando o seeding do banco de dados...");
 
   try {
-    // Limpar dados existentes
+    // Limpar dados existentes na ordem correta para respeitar as foreign keys
     console.log("🧹 Limpando dados existentes...");
+    await db.delete(orderItemTable);
+    await db.delete(orderTable);
+    await db.delete(cartItemTable);
+    await db.delete(cartTable);
     await db.delete(productVariantTable);
     await db.delete(productTable);
     await db.delete(categoryTable);
@@ -586,39 +643,97 @@ async function main() {
         slug: productSlug,
         description: productData.description,
         categoryId: categoryId,
+        gender: productData.gender,
       });
 
-      // Inserir variantes do produto
-      for (const variantData of productData.variants) {
-        const variantId = crypto.randomUUID();
+      // Inserir variantes do produto (cor x tamanho)
+      const availableSizes =
+        sizeByCategoryName[
+          productData.categoryName as keyof typeof sizeByCategoryName
+        ] || [];
+
+      for (
+        let variantIndex = 0;
+        variantIndex < productData.variants.length;
+        variantIndex++
+      ) {
+        const variantData = productData.variants[variantIndex];
         const productKey = productData.name as keyof typeof productImages;
         const variantImages =
           productImages[productKey]?.[
             variantData.color as keyof (typeof productImages)[typeof productKey]
           ] || [];
 
-        console.log(`  🎨 Criando variante: ${variantData.color}`);
+        // Para tênis, força a primeira cor (índice 0) a ficar sem estoque
+        const isShoeProduct = productData.categoryName === "Tênis";
+        const isFirstColor = variantIndex === 0;
+        const shouldForceZeroStock = isShoeProduct && isFirstColor;
 
-        await db.insert(productVariantTable).values({
-          id: variantId,
-          name: variantData.color,
-          productId: productId,
-          color: variantData.color,
-          imageUrl: variantImages[0] || "",
-          priceInCents: variantData.price,
-          slug: generateSlug(`${productData.name}-${variantData.color}`),
-        });
+        if (availableSizes.length === 0) {
+          // Produto sem tamanhos (acessórios)
+          const variantId = crypto.randomUUID();
+          const stock = shouldForceZeroStock
+            ? generateZeroStock()
+            : generateRandomStock();
+          console.log(
+            `  🎨 Criando variante: ${variantData.color} (Est: ${stock})${shouldForceZeroStock ? " [FORÇADO SEM ESTOQUE]" : ""}`,
+          );
+
+          await db.insert(productVariantTable).values({
+            id: variantId,
+            name: variantData.color,
+            productId: productId,
+            color: variantData.color,
+            size: null,
+            stock: stock,
+            imageUrl: variantImages[0] || "",
+            priceInCents: variantData.price,
+            slug: generateSlug(`${productData.name}-${variantData.color}`),
+          });
+        } else {
+          // Produto com tamanhos (roupas e calçados)
+          for (const size of availableSizes) {
+            const variantId = crypto.randomUUID();
+            const stock = shouldForceZeroStock
+              ? generateZeroStock()
+              : generateRandomStock();
+            console.log(
+              `  🎨 Criando variante: ${variantData.color} - Tam. ${size} (Est: ${stock})${shouldForceZeroStock ? " [FORÇADO SEM ESTOQUE]" : ""}`,
+            );
+
+            await db.insert(productVariantTable).values({
+              id: variantId,
+              name: `${variantData.color} - Tam. ${size}`,
+              productId: productId,
+              color: variantData.color,
+              size: size,
+              stock: stock,
+              imageUrl: variantImages[0] || "",
+              priceInCents: variantData.price,
+              slug: generateSlug(
+                `${productData.name}-${variantData.color}-${size}`,
+              ),
+            });
+          }
+        }
       }
     }
 
     console.log("✅ Seeding concluído com sucesso!");
+
+    // Calcular total de variantes considerando tamanhos
+    let totalVariants = 0;
+    for (const productData of products) {
+      const availableSizes =
+        sizeByCategoryName[
+          productData.categoryName as keyof typeof sizeByCategoryName
+        ] || [];
+      const sizesCount = availableSizes.length || 1; // 1 se não tiver tamanhos
+      totalVariants += productData.variants.length * sizesCount;
+    }
+
     console.log(
-      `📊 Foram criadas ${categories.length} categorias, ${
-        products.length
-      } produtos com ${products.reduce(
-        (acc, p) => acc + p.variants.length,
-        0,
-      )} variantes.`,
+      `📊 Foram criadas ${categories.length} categorias, ${products.length} produtos com ${totalVariants} variantes (incluindo combinações de cor e tamanho).`,
     );
   } catch (error) {
     console.error("❌ Erro durante o seeding:", error);

@@ -6,9 +6,10 @@ import { Header } from "@/components/common/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
 import { getCategories } from "@/helpers/categories";
+import { getCategoriesByGender } from "@/helpers/gender-categories";
 import { auth } from "@/lib/auth";
 
-import CartSummary from "../components/cart-summary";
+import CheckoutManager from "../components/checkout-manager";
 import { formatAddress } from "../helpers/address";
 import FinishOrderButton from "./components/finish-order-button";
 
@@ -37,23 +38,27 @@ const ConfirmationPage = async () => {
   if (!cart || cart?.items.length === 0) {
     redirect("/");
   }
-  const cartTotalInCents = cart.items.reduce(
+  const cartSubtotalInCents = cart.items.reduce(
     (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
     0,
   );
+  const shippingCostInCents = cart.shippingCostInCents || 0;
+  const cartTotalInCents = cartSubtotalInCents + shippingCostInCents;
   if (!cart.shippingAddress) {
     redirect("/cart/identification");
   }
 
-  const categories = await getCategories();
+  const [categories, genderCategories] = await Promise.all([
+    getCategories(),
+    getCategoriesByGender(),
+  ]);
 
   return (
     <div>
-      <Header categories={categories} />
+      <Header categories={categories} genderCategories={genderCategories} />
       <div className="space-y-4 px-5 pt-25">
-        <CartSummary
-          subtotalInCents={cartTotalInCents}
-          totalInCents={cartTotalInCents}
+        <CheckoutManager
+          subtotalInCents={cartSubtotalInCents}
           products={cart.items.map((item) => ({
             id: item.productVariant.id,
             name: item.productVariant.product.name,
@@ -62,6 +67,20 @@ const ConfirmationPage = async () => {
             priceInCents: item.productVariant.priceInCents,
             imageUrl: item.productVariant.imageUrl,
           }))}
+          initialShipping={
+            cart.shippingOptionId &&
+            cart.shippingOptionName &&
+            cart.shippingCostInCents !== null &&
+            cart.shippingDeliveryDays
+              ? {
+                  id: cart.shippingOptionId,
+                  name: cart.shippingOptionName,
+                  priceInCents: cart.shippingCostInCents,
+                  deliveryTimeInDays: cart.shippingDeliveryDays,
+                }
+              : null
+          }
+          readOnly={true}
         />
         <Card>
           <CardHeader>

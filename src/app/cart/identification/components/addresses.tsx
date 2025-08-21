@@ -49,11 +49,13 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddressesProps {
   shippingAddresses: (typeof shippingAddressTable.$inferSelect)[];
   defaultShippingAddressId: string | null;
+  isShippingValid?: boolean;
 }
 
 const Addresses = ({
   shippingAddresses,
   defaultShippingAddressId,
+  isShippingValid = false,
 }: AddressesProps) => {
   const router = useRouter();
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
@@ -102,16 +104,25 @@ const Addresses = ({
   };
 
   const handleGoToPayment = async () => {
-    if (!selectedAddress || selectedAddress === "add_new") return;
+    if (!selectedAddress || selectedAddress === "add_new") {
+      toast.error("Por favor, selecione um endereço de entrega.");
+      return;
+    }
+
+    if (!isShippingValid) {
+      toast.error("Por favor, calcule o frete antes de continuar.");
+      return;
+    }
 
     try {
       await updateCartShippingAddressMutation.mutateAsync({
         shippingAddressId: selectedAddress,
       });
+      toast.success("Endereço de entrega confirmado!");
       router.push("/cart/confirmation");
     } catch (error) {
       toast.error("Erro ao selecionar endereço. Tente novamente.");
-      console.error(error);
+      console.error("Erro ao atualizar endereço de entrega:", error);
     }
   };
 
@@ -195,16 +206,28 @@ const Addresses = ({
         )}
 
         {selectedAddress && selectedAddress !== "add_new" && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-2">
             <Button
               onClick={handleGoToPayment}
               className="w-full rounded-full"
-              disabled={updateCartShippingAddressMutation.isPending}
+              disabled={
+                updateCartShippingAddressMutation.isPending || !isShippingValid
+              }
             >
               {updateCartShippingAddressMutation.isPending
                 ? "Processando..."
                 : "Ir para pagamento"}
             </Button>
+            {!isShippingValid && (
+              <div className="space-y-1">
+                <p className="text-center text-sm text-orange-600">
+                  ⚠️ Calcule o frete acima para continuar
+                </p>
+                <p className="text-center text-xs text-gray-500">
+                  Status: Frete {isShippingValid ? "válido" : "não calculado"}
+                </p>
+              </div>
+            )}
           </div>
         )}
 

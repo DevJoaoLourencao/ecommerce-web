@@ -89,6 +89,16 @@ export const Cart = () => {
               <div className="mb-2 space-y-3">
                 <div className="flex items-center justify-between text-base font-medium">
                   <p>Subtotal</p>
+                  <p>{formatCentsToBRL(cart?.subtotalInCents ?? 0)}</p>
+                </div>
+                {cart?.shippingCostInCents && cart.shippingCostInCents > 0 && (
+                  <div className="text-muted-foreground flex items-center justify-between text-sm">
+                    <p>Frete</p>
+                    <p>{formatCentsToBRL(cart.shippingCostInCents)}</p>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-base font-bold">
+                  <p>Total</p>
                   <p>{formatCentsToBRL(cart?.totalPriceInCents ?? 0)}</p>
                 </div>
               </div>

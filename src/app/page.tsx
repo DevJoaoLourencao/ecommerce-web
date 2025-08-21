@@ -9,24 +9,34 @@ import ProductList from "@/components/common/product-list";
 import { db } from "@/db";
 import { productTable } from "@/db/schema";
 import { getCategories } from "@/helpers/categories";
+import { getCategoriesByGender } from "@/helpers/gender-categories";
+import { filterProductsWithStock } from "@/helpers/product-filters";
 
 const Home = async () => {
-  const products = await db.query.productTable.findMany({
-    with: {
-      variants: true,
-    },
-  });
-  const newlyCreatedProducts = await db.query.productTable.findMany({
-    orderBy: [desc(productTable.createdAt)],
-    with: {
-      variants: true,
-    },
-  });
-  const categories = await getCategories();
+  const [products, newlyCreatedProducts, categories, genderCategories] =
+    await Promise.all([
+      db.query.productTable.findMany({
+        with: {
+          variants: true,
+        },
+      }),
+      db.query.productTable.findMany({
+        orderBy: [desc(productTable.createdAt)],
+        with: {
+          variants: true,
+        },
+      }),
+      getCategories(),
+      getCategoriesByGender(),
+    ]);
+
+  // Filtrar apenas produtos com estoque
+  const productsWithStock = filterProductsWithStock(products);
+  const newProductsWithStock = filterProductsWithStock(newlyCreatedProducts);
 
   return (
     <>
-      <Header categories={categories} />
+      <Header categories={categories} genderCategories={genderCategories} />
       <div className="space-y-6 pt-30 lg:pt-[138px]">
         {/* Mobile Banner */}
         <div className="px-5 lg:hidden">
@@ -55,7 +65,7 @@ const Home = async () => {
         {/* Brands Carousel */}
         <BrandsCarousel />
 
-        <ProductList products={products} title="Mais vendidos" />
+        <ProductList products={productsWithStock} title="Mais vendidos" />
 
         <div className="px-5">
           <CategorySelector categories={categories} />
@@ -72,7 +82,7 @@ const Home = async () => {
           />
         </div>
 
-        <ProductList products={newlyCreatedProducts} title="Novos produtos" />
+        <ProductList products={newProductsWithStock} title="Novos produtos" />
         <Footer />
       </div>
     </>

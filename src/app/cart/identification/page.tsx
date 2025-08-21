@@ -7,10 +7,10 @@ import { Header } from "@/components/common/header";
 import { db } from "@/db";
 import { shippingAddressTable } from "@/db/schema";
 import { getCategories } from "@/helpers/categories";
+import { getCategoriesByGender } from "@/helpers/gender-categories";
 import { auth } from "@/lib/auth";
 
-import CartSummary from "../components/cart-summary";
-import Addresses from "./components/addresses";
+import CheckoutValidationWrapper from "./components/checkout-validation-wrapper";
 
 const IdentificationPage = async () => {
   const session = await auth.api.getSession({
@@ -37,11 +37,12 @@ const IdentificationPage = async () => {
   if (!cart || cart?.items.length === 0) {
     redirect("/");
   }
-  const [shippingAddresses, categories] = await Promise.all([
+  const [shippingAddresses, categories, genderCategories] = await Promise.all([
     db.query.shippingAddressTable.findMany({
       where: eq(shippingAddressTable.userId, session.user.id),
     }),
     getCategories(),
+    getCategoriesByGender(),
   ]);
   const cartTotalInCents = cart.items.reduce(
     (acc, item) => acc + item.productVariant.priceInCents * item.quantity,
@@ -49,11 +50,10 @@ const IdentificationPage = async () => {
   );
   return (
     <div>
-      <Header categories={categories} />
-      <div className="space-y-4 px-5 pt-25">
-        <CartSummary
+      <Header categories={categories} genderCategories={genderCategories} />
+      <div className="px-5 pt-25">
+        <CheckoutValidationWrapper
           subtotalInCents={cartTotalInCents}
-          totalInCents={cartTotalInCents}
           products={cart.items.map((item) => ({
             id: item.productVariant.id,
             name: item.productVariant.product.name,
@@ -62,10 +62,21 @@ const IdentificationPage = async () => {
             priceInCents: item.productVariant.priceInCents,
             imageUrl: item.productVariant.imageUrl,
           }))}
-        />
-        <Addresses
           shippingAddresses={shippingAddresses}
           defaultShippingAddressId={cart.shippingAddress?.id || null}
+          initialShipping={
+            cart.shippingOptionId &&
+            cart.shippingOptionName &&
+            cart.shippingCostInCents !== null &&
+            cart.shippingDeliveryDays
+              ? {
+                  id: cart.shippingOptionId,
+                  name: cart.shippingOptionName,
+                  priceInCents: cart.shippingCostInCents,
+                  deliveryTimeInDays: cart.shippingDeliveryDays,
+                }
+              : null
+          }
         />
       </div>
       <div className="mt-12">

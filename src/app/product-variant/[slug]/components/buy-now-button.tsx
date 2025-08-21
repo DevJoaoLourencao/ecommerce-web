@@ -11,9 +11,14 @@ import { Button } from "@/components/ui/button";
 interface BuyNowButtonProps {
   productVariantId: string;
   quantity: number;
+  stock: number;
 }
 
-const BuyNowButton = ({ productVariantId, quantity }: BuyNowButtonProps) => {
+const BuyNowButton = ({
+  productVariantId,
+  quantity,
+  stock,
+}: BuyNowButtonProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -35,11 +40,13 @@ const BuyNowButton = ({ productVariantId, quantity }: BuyNowButtonProps) => {
     },
   });
 
+  const isOutOfStock = stock === 0;
+
   return (
     <Button
       className="rounded-full"
       size="lg"
-      disabled={isPending}
+      disabled={isPending || isOutOfStock}
       onClick={() => mutate()}
     >
       {isPending && <Loader2 className="mr-2 animate-spin" />}
