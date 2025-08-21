@@ -43,18 +43,10 @@ const CartItem = ({
     });
   };
   const handleDecreaseQuantityClick = () => {
-    decreaseCartProductQuantityMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success("Quantidade do produto diminuida.");
-      },
-    });
+    decreaseCartProductQuantityMutation.mutate();
   };
   const handleIncreaseQuantityClick = () => {
-    increaseCartProductQuantityMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success("Quantidade do produto aumentada.");
-      },
-    });
+    increaseCartProductQuantityMutation.mutate();
   };
   return (
     <div className="flex items-center justify-between">
@@ -75,7 +67,7 @@ const CartItem = ({
           </div>
           <div className="flex w-[100px] items-center justify-between rounded-lg border p-1">
             <Button
-              className="h-4 w-4"
+              className="h-4 w-4 rounded-full"
               variant="ghost"
               onClick={handleDecreaseQuantityClick}
             >
@@ -83,7 +75,7 @@ const CartItem = ({
             </Button>
             <p className="text-xs font-medium">{quantity}</p>
             <Button
-              className="h-4 w-4"
+              className="h-4 w-4 rounded-full"
               variant="ghost"
               onClick={handleIncreaseQuantityClick}
             >
@@ -93,7 +85,12 @@ const CartItem = ({
         </div>
       </div>
       <div className="flex flex-col items-end justify-center gap-4">
-        <Button variant="outline" size="icon" onClick={handleDeleteClick}>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          onClick={handleDeleteClick}
+        >
           <TrashIcon />
         </Button>
         <p className="text-sm font-bold">

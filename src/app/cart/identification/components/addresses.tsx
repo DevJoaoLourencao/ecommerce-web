@@ -1,14 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
 import { toast } from "sonner";
 import z from "zod";
 
-import { getCart } from "@/actions/get-cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,8 +25,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { shippingAddressTable } from "@/db/schema";
 import { useCreateShippingAddress } from "@/hooks/mutations/use-create-shipping-address";
 import { useUpdateCartShippingAddress } from "@/hooks/mutations/use-update-cart-shipping-address";
-import { useCart } from "@/hooks/queries/use-cart";
 import { useUserAddresses } from "@/hooks/queries/use-user-addresses";
+import { fetchCepData } from "@/lib/cep";
 
 import { formatAddress } from "../../helpers/address";
 
@@ -59,6 +59,7 @@ const Addresses = ({
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
     defaultShippingAddressId || null,
   );
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   const createShippingAddressMutation = useCreateShippingAddress();
   const updateCartShippingAddressMutation = useUpdateCartShippingAddress();
   const { data: addresses, isLoading } = useUserAddresses({
@@ -107,11 +108,38 @@ const Addresses = ({
       await updateCartShippingAddressMutation.mutateAsync({
         shippingAddressId: selectedAddress,
       });
-      toast.success("Endereço selecionado para entrega!");
       router.push("/cart/confirmation");
     } catch (error) {
       toast.error("Erro ao selecionar endereço. Tente novamente.");
       console.error(error);
+    }
+  };
+
+  const handleCepLookup = async (cep: string) => {
+    // Only lookup if CEP has 8 digits (complete)
+    const cleanCep = cep.replace(/\D/g, "");
+    if (cleanCep.length !== 8) return;
+
+    setIsLoadingCep(true);
+    try {
+      const cepData = await fetchCepData(cleanCep);
+
+      if (cepData) {
+        // Auto-fill the form fields with CEP data
+        form.setValue("address", cepData.logradouro);
+        form.setValue("neighborhood", cepData.bairro);
+        form.setValue("city", cepData.localidade);
+        form.setValue("state", cepData.uf);
+
+        toast.success("Endereço encontrado!");
+      } else {
+        toast.error("CEP não encontrado. Verifique o número digitado.");
+      }
+    } catch (error) {
+      toast.error("Erro ao buscar CEP. Tente novamente.");
+      console.error("CEP lookup error:", error);
+    } finally {
+      setIsLoadingCep(false);
     }
   };
 
@@ -170,7 +198,7 @@ const Addresses = ({
           <div className="mt-4">
             <Button
               onClick={handleGoToPayment}
-              className="w-full"
+              className="w-full rounded-full"
               disabled={updateCartShippingAddressMutation.isPending}
             >
               {updateCartShippingAddressMutation.isPending
@@ -194,7 +222,11 @@ const Addresses = ({
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite seu email" {...field} />
+                        <Input
+                          className="rounded-full"
+                          placeholder="Digite seu email"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -209,6 +241,7 @@ const Addresses = ({
                       <FormLabel>Nome completo</FormLabel>
                       <FormControl>
                         <Input
+                          className="rounded-full"
                           placeholder="Digite seu nome completo"
                           {...field}
                         />
@@ -229,6 +262,7 @@ const Addresses = ({
                           format="###.###.###-##"
                           placeholder="000.000.000-00"
                           customInput={Input}
+                          className="rounded-full"
                           {...field}
                         />
                       </FormControl>
@@ -248,6 +282,7 @@ const Addresses = ({
                           format="(##) #####-####"
                           placeholder="(11) 99999-9999"
                           customInput={Input}
+                          className="rounded-full"
                           {...field}
                         />
                       </FormControl>
@@ -261,13 +296,32 @@ const Addresses = ({
                   name="zipCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>CEP</FormLabel>
+                      <FormLabel>
+                        CEP
+                        {isLoadingCep && (
+                          <Loader2 className="ml-2 inline h-4 w-4 animate-spin" />
+                        )}
+                      </FormLabel>
                       <FormControl>
                         <PatternFormat
                           format="#####-###"
                           placeholder="00000-000"
                           customInput={Input}
+                          className="rounded-full"
                           {...field}
+                          onBlur={(e) => {
+                            field.onBlur();
+                            handleCepLookup(e.target.value);
+                          }}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // Auto-lookup when user types complete CEP
+                            const value = e.target.value;
+                            if (value.length === 9) {
+                              // Format: #####-###
+                              handleCepLookup(value);
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -282,7 +336,11 @@ const Addresses = ({
                     <FormItem>
                       <FormLabel>Endereço</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite seu endereço" {...field} />
+                        <Input
+                          className="rounded-full"
+                          placeholder="Digite seu endereço"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,7 +354,11 @@ const Addresses = ({
                     <FormItem>
                       <FormLabel>Número</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite o número" {...field} />
+                        <Input
+                          className="rounded-full"
+                          placeholder="Digite o número"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -311,6 +373,7 @@ const Addresses = ({
                       <FormLabel>Complemento</FormLabel>
                       <FormControl>
                         <Input
+                          className="rounded-full"
                           placeholder="Apto, bloco, etc. (opcional)"
                           {...field}
                         />
@@ -327,7 +390,11 @@ const Addresses = ({
                     <FormItem>
                       <FormLabel>Bairro</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite o bairro" {...field} />
+                        <Input
+                          className="rounded-full"
+                          placeholder="Digite o bairro"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -341,7 +408,11 @@ const Addresses = ({
                     <FormItem>
                       <FormLabel>Cidade</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite a cidade" {...field} />
+                        <Input
+                          className="rounded-full"
+                          placeholder="Digite a cidade"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -355,7 +426,11 @@ const Addresses = ({
                     <FormItem>
                       <FormLabel>Estado</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite o estado" {...field} />
+                        <Input
+                          className="rounded-full"
+                          placeholder="Digite o estado"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -365,7 +440,7 @@ const Addresses = ({
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full rounded-full"
                 disabled={
                   createShippingAddressMutation.isPending ||
                   updateCartShippingAddressMutation.isPending

@@ -75,7 +75,7 @@ const Orders = ({ orders }: OrdersProps) => {
         <p className="mb-6 text-gray-500">
           Você ainda não fez nenhum pedido. Que tal começar a comprar?
         </p>
-        <Button asChild>
+        <Button asChild className="rounded-full">
           <a href="/">Começar a comprar</a>
         </Button>
       </div>
@@ -276,7 +276,7 @@ const Orders = ({ orders }: OrdersProps) => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1"
+                            className="flex-1 rounded-full"
                           >
                             <Truck className="mr-2 h-4 w-4" />
                             Rastrear pedido
@@ -286,7 +286,7 @@ const Orders = ({ orders }: OrdersProps) => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1"
+                            className="flex-1 rounded-full"
                           >
                             <XCircle className="mr-2 h-4 w-4" />
                             Cancelar pedido

@@ -97,7 +97,11 @@ const SignUpForm = () => {
                   <FormItem>
                     <FormLabel>Nome</FormLabel>
                     <FormControl>
-                      <Input placeholder="Digite seu nome" {...field} />
+                      <Input
+                        className="rounded-full"
+                        placeholder="Digite seu nome"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -110,7 +114,11 @@ const SignUpForm = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Digite seu email" {...field} />
+                      <Input
+                        className="rounded-full"
+                        placeholder="Digite seu email"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -124,6 +132,7 @@ const SignUpForm = () => {
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <Input
+                        className="rounded-full"
                         placeholder="Digite sua senha"
                         type="password"
                         {...field}
@@ -141,6 +150,7 @@ const SignUpForm = () => {
                     <FormLabel>Confirmar senha</FormLabel>
                     <FormControl>
                       <Input
+                        className="rounded-full"
                         placeholder="Digite a sua senha novamente"
                         type="password"
                         {...field}
@@ -152,7 +162,9 @@ const SignUpForm = () => {
               />
             </CardContent>
             <CardFooter>
-              <Button type="submit">Criar conta</Button>
+              <Button type="submit" className="w-full rounded-full">
+                Criar conta
+              </Button>
             </CardFooter>
           </form>
         </Form>

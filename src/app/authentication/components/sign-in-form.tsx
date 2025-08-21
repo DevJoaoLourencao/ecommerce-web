@@ -96,7 +96,11 @@ const SignInForm = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Digite seu email" {...field} />
+                      <Input
+                        className="rounded-full"
+                        placeholder="Digite seu email"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -110,6 +114,7 @@ const SignInForm = () => {
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <Input
+                        className="rounded-full"
                         placeholder="Digite sua senha"
                         type="password"
                         {...field}
@@ -120,13 +125,13 @@ const SignInForm = () => {
                 )}
               />
             </CardContent>
-            <CardFooter className="flex flex-col gap-2">
-              <Button type="submit" className="w-full">
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full rounded-full">
                 Entrar
               </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full rounded-full"
                 onClick={handleSignInWithGoogle}
                 type="button"
               >

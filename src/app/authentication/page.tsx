@@ -13,9 +13,19 @@ const Authentication = async () => {
 
       <div className="flex w-full flex-col gap-6 p-5 pt-25">
         <Tabs defaultValue="sign-in">
-          <TabsList>
-            <TabsTrigger value="sign-in">Entrar</TabsTrigger>
-            <TabsTrigger value="sign-up">Criar conta</TabsTrigger>
+          <TabsList className="bg-primary/10 border-primary/20 rounded-full">
+            <TabsTrigger
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-full"
+              value="sign-in"
+            >
+              Entrar
+            </TabsTrigger>
+            <TabsTrigger
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-full"
+              value="sign-up"
+            >
+              Criar conta
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="sign-in" className="w-full">
             <SignInForm />

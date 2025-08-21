@@ -9,7 +9,13 @@ import { useCart } from "@/hooks/queries/use-cart";
 
 import { ScrollArea } from "../ui/scroll-area";
 import { Separator } from "../ui/separator";
-import { Sheet, SheetClose, SheetContent, SheetTrigger } from "../ui/sheet";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
 import CartItem from "./cart-item";
 
 export const Cart = () => {
@@ -17,11 +23,17 @@ export const Cart = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" data-cart-trigger>
-          <ShoppingBasketIcon />
+        <Button
+          variant="outline"
+          size="icon"
+          data-cart-trigger
+          className="bg-primary rounded-full"
+        >
+          <ShoppingBasketIcon className="text-white" />
         </Button>
       </SheetTrigger>
       <SheetContent className="w-80 rounded-l-3xl p-0 [&>button]:absolute [&>button]:top-4 [&>button]:right-4 [&>button]:flex [&>button]:h-10 [&>button]:w-10 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-gray-100 [&>button]:hover:bg-gray-200">
+        <SheetTitle className="sr-only">Sacola de compras</SheetTitle>
         <div className="flex h-full flex-col">
           {/* Header da Sacola */}
           <div className="p-6">
@@ -83,10 +95,7 @@ export const Cart = () => {
 
               <Separator className="mb-4" />
               <div className="space-y-3">
-                <Button
-                  className="h-12 w-full rounded-full bg-purple-600 text-white hover:bg-purple-700"
-                  asChild
-                >
+                <Button className="h-12 w-full rounded-full" asChild>
                   <Link href="/cart/identification">Finalizar a compra</Link>
                 </Button>
 
